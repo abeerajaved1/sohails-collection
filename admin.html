@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin | Sohail's Collection</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,sans-serif;background:#f3f6fc;color:#0f1f3d}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.6rem;background:#0f1f3d;color:#ffa24d;padding:.8rem 1.2rem}
+nav{display:flex;gap:.5rem;flex-wrap:wrap}
+button,select,input,textarea{font:inherit}
+button{background:#ff7a1a;border:0;border-radius:8px;padding:.5rem .9rem;font-weight:600;cursor:pointer;color:#0f1f3d}
+button.sec{background:#fff;border:1px solid #0f1f3d}button.dng{background:#c0392b;color:#fff}
+nav button{background:transparent;color:#ffa24d;border:1px solid #ffa24d}nav button.on{background:#ffa24d;color:#0f1f3d}
+main{padding:1.2rem;max-width:1200px;margin:auto}
+.box{max-width:340px;margin:12vh auto;background:#fff;padding:1.6rem;border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.12);display:flex;flex-direction:column;gap:.8rem}
+input,select,textarea{padding:.55rem .7rem;border:1px solid #c3cfe4;border-radius:8px;width:100%;background:#fff}
+.err{color:#c0392b;margin:0;min-height:1.2em}#msg{color:#0f1f3d;font-weight:600}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:12px;overflow:hidden}
+th,td{padding:.6rem .7rem;text-align:left;border-bottom:1px solid #e1e8f4;vertical-align:top;font-size:.9rem}
+th{background:#e3eaf6}
+.wrap{overflow-x:auto}
+.thumb{width:48px;height:48px;object-fit:cover;border-radius:8px;background:#e3eaf6}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;gap:.6rem;flex-wrap:wrap}
+#pform{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:1rem;z-index:5}
+#pform form{background:#fff;border-radius:14px;padding:1.4rem;width:min(520px,100%);max-height:92vh;overflow:auto;display:flex;flex-direction:column;gap:.6rem}
+label{display:flex;flex-direction:column;gap:.2rem;font-size:.85rem;font-weight:600}
+.row{display:flex;gap:.6rem}.row>*{flex:1}
+.tag{display:inline-block;padding:.1rem .6rem;border-radius:99px;background:#e3eaf6;font-size:.8rem}
+.pill{display:inline-block;min-width:1.3rem;padding:0 .35rem;border-radius:99px;background:#ff7a1a;color:#0f1f3d;font-size:.78rem;font-weight:700;text-align:center;margin-left:.3rem}
+.tag.new{background:#ff7a1a;color:#0f1f3d;font-weight:700}
+tr.fresh td{background:#fff3e6}
+#alert{display:flex;gap:.8rem;align-items:center;justify-content:space-between;flex-wrap:wrap;background:#ff7a1a;color:#0f1f3d;font-weight:700;padding:.8rem 1rem;border-radius:12px;margin-bottom:1rem;animation:pulse 1.6s ease-in-out infinite}
+#alert button{background:#0f1f3d;color:#fff}
+@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(255,122,26,.35)}}
+@media(prefers-reduced-motion:reduce){#alert{animation:none}}
+.pv{width:100%;max-height:200px;object-fit:contain;background:#e3eaf6;border-radius:10px}
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.7rem}
+.lib figure{margin:0;background:#fff;border-radius:10px;padding:.5rem;box-shadow:0 1px 4px rgba(0,0,0,.08);display:flex;flex-direction:column;gap:.35rem;font-size:.75rem}
+.lib img{width:100%;height:100px;object-fit:cover;border-radius:8px;background:#e3eaf6;cursor:pointer}
+.lib button{padding:.25rem .5rem;font-size:.75rem}
+.pick{border:1px dashed #c3cfe4;border-radius:10px;padding:.6rem;max-height:220px;overflow:auto}
+.hint{font-size:.78rem;font-weight:400;color:#5b6b88}
+.ok{color:#1c7c3a;margin:0}
+[hidden]{display:none!important}
+</style></head><body>
+<div id="login" class="box"><h2 style="margin:0">Admin login</h2>
+<input id="pw" type="password" placeholder="Password" autocomplete="current-password">
+<button id="loginBtn" type="button">Log in</button><p id="loginMsg" class="err"></p></div>
+
+<div id="app" hidden>
+<header><b>Sohail's Collection &middot; Admin</b>
+<nav><button data-tab="orders" class="on">Orders<span id="ocount" class="pill" hidden>0</span></button><button data-tab="products">Products</button><button data-tab="categories">Categories</button><button data-tab="photos">Photos</button><button id="backup" class="sec" type="button">Backup</button><button id="logout" class="sec">Log out</button></nav></header>
+<main><div id="alert" hidden role="alert"><span id="alertText"></span><span><button id="alertView" type="button">View orders</button> <button id="alertSeen" type="button">Got it</button></span></div><p id="msg" class="err" role="status"></p><section id="orders"></section><section id="products" hidden></section><section id="categories" hidden></section><section id="photos" hidden></section></main></div>
+
+<div id="pform" hidden><form id="pf">
+<h3 id="pfTitle" style="margin:0">Product</h3>
+<label>Name<input name="name" required></label>
+<div class="row"><label>Category<select name="category" id="pfCat"></select></label><label>Badge (optional)<input name="badge"></label></div>
+<div class="row"><label>Price (Rs.)<input name="price" type="number" min="1" required></label><label>Stock<input name="stock" type="number" min="0" required></label></div>
+<label>Photo<span class="hint">Upload from your phone or computer (JPG, PNG, WEBP, GIF, max 5 MB)</span>
+<img id="pfPreview" class="pv" alt="Photo preview" hidden>
+<input id="pfFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"></label>
+<div class="row"><button type="button" class="sec" id="pfLib">Choose from my photos</button></div>
+<div id="pfPick" class="pick lib" hidden></div>
+<label>Or paste a photo link<input name="image" id="pfImage" placeholder="uploads/... or https://..." required></label>
+<label>Description<textarea name="description" rows="3"></textarea></label>
+<label style="flex-direction:row;align-items:center;gap:.5rem"><input name="active" type="checkbox" style="width:auto"> Show on the store</label>
+<p id="pfErr" class="err"></p>
+<div class="row"><button type="submit">Save</button><button type="button" class="sec" id="pfCancel">Cancel</button></div></form></div>
+
+<script>
+(function () {
+  var token = sessionStorage.getItem("adminToken") || "", cats = [], statuses = [], editId = null, prods = [], pollTimer = null, lastUnseen = 0, baseTitle = document.title, ac = null, askedNotif = false;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function money(n) { return "Rs. " + Number(n).toLocaleString("en-US"); }
+  function api(method, path, body) {
+    return fetch(path, { method: method, headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().then(function (j) { if (r.status === 401 && token) logout(); if (!r.ok) throw new Error(j.error || "Error"); return j; }); });
+  }
+  function show(on) { $("login").hidden = on; $("app").hidden = !on; }
+  function logout() { clearInterval(pollTimer); document.title = baseTitle; token = ""; sessionStorage.removeItem("adminToken"); show(false); }
+  function say(t) { $("msg").textContent = t || ""; }
+
+  $("loginBtn").onclick = function () {
+    fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: $("pw").value }) })
+      .then(function (r) { return r.json().then(function (j) { if (!r.ok) throw new Error(j.error); return j; }); })
+      .then(function (j) { token = j.token; sessionStorage.setItem("adminToken", token); $("pw").value = ""; $("loginMsg").textContent = ""; start(); })
+      .catch(function (e) { $("loginMsg").textContent = e.message; });
+  };
+  $("pw").onkeydown = function (e) { if (e.key === "Enter") $("loginBtn").onclick(); };
+  $("logout").onclick = logout;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (b) {
+    b.onclick = function () {
+      Array.prototype.forEach.call(document.querySelectorAll("[data-tab]"), function (x) { x.classList.toggle("on", x === b); });
+      ["orders", "products", "categories", "photos"].forEach(function (t) { $(t).hidden = b.dataset.tab !== t; }); say("");
+      if (b.dataset.tab === "photos") loadPhotos(); if (b.dataset.tab === "categories") loadCategories();
+    };
+  });
+
+  function loadOrders() {
+    return api("GET", "/api/admin/orders").then(function (d) {
+      statuses = d.statuses;
+      if (!d.orders.length) { $("orders").innerHTML = "<p>No orders yet.</p>"; return; }
+      $("orders").innerHTML = '<div class="wrap"><table><tr><th>Order</th><th>Customer</th><th>Items</th><th>Total</th><th>Payment</th><th>Status</th></tr>' +
+        d.orders.map(function (o) {
+          return "<tr" + (o.seen === false ? ' class="fresh"' : "") + "><td><b>" + esc(o.id) + "</b>" + (o.seen === false ? ' <span class="tag new">NEW</span>' : "") + "<br>" + esc(new Date(o.createdAt).toLocaleString()) + "</td>" +
+            "<td>" + esc(o.customer.name) + "<br>" + esc(o.customer.phone) + "<br>" + esc(o.customer.address) + ", " + esc(o.customer.city) + "</td>" +
+            "<td>" + o.items.map(function (l) { return esc(l.name) + " &times; " + esc(l.qty); }).join("<br>") + "</td>" +
+            "<td><b>" + money(o.total) + "</b></td><td>" + esc(o.payment) + "</td>" +
+            '<td><select data-oid="' + esc(o.id) + '">' + statuses.map(function (s) { return "<option" + (s === o.status ? " selected" : "") + ">" + esc(s) + "</option>"; }).join("") + "</select>" +
+            (o.status === "Cancelled" || o.status === "Delivered" ? '<br><button class="dng" style="margin-top:.4rem;padding:.25rem .6rem" data-delo="' + esc(o.id) + '" type="button">Delete</button>' : "") + "</td></tr>";
+        }).join("") + "</table></div>";
+    }).catch(function (e) { say(e.message); });
+  }
+  $("orders").onclick = function (e) {
+    var b = e.target.closest("button[data-delo]"); if (!b || !confirm("Delete order " + b.dataset.delo + " permanently?")) return;
+    api("DELETE", "/api/admin/orders/" + b.dataset.delo).then(function () { say("Order deleted."); loadOrders(); }).catch(function (er) { say(er.message); });
+  };
+  $("orders").onchange = function (e) {
+    var id = e.target.dataset.oid; if (!id) return;
+    api("PUT", "/api/admin/orders/" + id, { status: e.target.value }).then(function () { say("Order updated."); loadProducts(); }).catch(function (er) { say(er.message); loadOrders(); });
+  };
+
+  function loadProducts() {
+    return api("GET", "/api/admin/products").then(function (d) {
+      prods = d.products; cats = d.categories;
+      $("products").innerHTML = '<div class="top"><h3 style="margin:0">Products (' + prods.length + ')</h3><button id="addP" type="button">+ Add product</button></div><div class="wrap"><table><tr><th></th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Shown</th><th></th></tr>' +
+        prods.map(function (p) {
+          return '<tr><td><img class="thumb" alt="" data-src="' + esc(p.id) + '"></td><td><b>' + esc(p.name) + "</b><br><small>" + esc(p.id) + "</small></td><td>" + esc(p.category) + "</td><td>" + money(p.price) + "</td><td>" + esc(p.stock) + (p.stock === 0 ? ' <span class="tag">Sold out</span>' : "") + "</td><td>" + (p.active === false ? "No" : "Yes") +
+            '</td><td><button class="sec" data-edit="' + esc(p.id) + '" type="button">Edit</button> <button class="dng" data-del="' + esc(p.id) + '" type="button">Delete</button></td></tr>';
+        }).join("") + "</table></div>";
+      Array.prototype.forEach.call($("products").querySelectorAll("img[data-src]"), function (im) { var p = prods.filter(function (x) { return x.id === im.dataset.src; })[0]; if (p) im.src = p.image; });
+      $("addP").onclick = function () { openForm(null); };
+    }).catch(function (e) { say(e.message); });
+  }
+  $("products").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.edit) openForm(b.dataset.edit);
+    if (b.dataset.del && confirm("Delete this product? This cannot be undone.")) api("DELETE", "/api/admin/products/" + b.dataset.del).then(function () { say("Product deleted."); loadProducts(); }).catch(function (er) { say(er.message); });
+  };
+  function openForm(id) {
+    editId = id; var f = $("pf"), p = prods.filter(function (x) { return x.id === id; })[0] || { category: cats[0], stock: 10, active: true, image: "images/" };
+    $("pfTitle").textContent = id ? "Edit product" : "Add product";
+    $("pfCat").innerHTML = cats.map(function (c) { return "<option" + (c === p.category ? " selected" : "") + ">" + esc(c) + "</option>"; }).join("");
+    ["name", "badge", "price", "stock", "image", "description"].forEach(function (k) { f.elements[k].value = p[k] == null ? "" : p[k]; });
+    f.elements.active.checked = p.active !== false; $("pfErr").textContent = ""; $("pfFile").value = ""; $("pfPick").hidden = true; preview(p.image && p.image !== "images/" ? p.image : ""); $("pform").hidden = false;
+  }
+  $("pfCancel").onclick = function () { $("pform").hidden = true; };
+  $("pf").onsubmit = function (e) {
+    e.preventDefault(); var f = e.target;
+    var body = { name: f.elements.name.value, category: f.elements.category.value, badge: f.elements.badge.value, price: f.elements.price.value, stock: f.elements.stock.value, image: f.elements.image.value, description: f.elements.description.value, active: f.elements.active.checked };
+    api(editId ? "PUT" : "POST", "/api/admin/products" + (editId ? "/" + editId : ""), body)
+      .then(function () { $("pform").hidden = true; say("Saved."); loadProducts(); }).catch(function (er) { $("pfErr").textContent = er.message; });
+  };
+  // ---- Photo upload ----
+  function upload(file) {
+    if (!file) return Promise.reject(new Error("Choose a photo first."));
+    if (file.size > 5 * 1024 * 1024) return Promise.reject(new Error("Photo is too large (max 5 MB)."));
+    return fetch("/api/admin/upload", { method: "POST", headers: { "Content-Type": "application/octet-stream", Authorization: "Bearer " + token }, body: file })
+      .then(function (r) { return r.json().then(function (j) { if (r.status === 401) logout(); if (!r.ok) throw new Error(j.error || "Upload failed"); return j.image; }); });
+  }
+  function preview(src) { var im = $("pfPreview"); im.hidden = !src; if (src) im.src = src; }
+  $("pfImage").oninput = function () { preview(this.value.trim().length > 7 ? this.value.trim() : ""); };
+  $("pfFile").onchange = function () {
+    var f = this.files[0]; if (!f) return; $("pfErr").textContent = "Uploading...";
+    upload(f).then(function (img) { $("pfImage").value = img; preview(img); $("pfErr").textContent = ""; })
+      .catch(function (e) { $("pfErr").textContent = e.message; });
+  };
+  function libGrid(el, media, onPick) {
+    el.innerHTML = media.length ? media.map(function (m) { return '<figure><img src="' + esc(m.image) + '" alt="" data-pick="' + esc(m.image) + '"></figure>'; }).join("") : "<small>No uploaded photos yet.</small>";
+    el.onclick = function (e) { var i = e.target.closest("[data-pick]"); if (i) onPick(i.dataset.pick); };
+  }
+  $("pfLib").onclick = function () {
+    var box = $("pfPick"); if (!box.hidden) { box.hidden = true; return; }
+    api("GET", "/api/admin/media").then(function (d) { libGrid(box, d.media, function (img) { $("pfImage").value = img; preview(img); box.hidden = true; }); box.hidden = false; })
+      .catch(function (e) { $("pfErr").textContent = e.message; });
+  };
+
+  // ---- Photos tab: library + home page photo ----
+  function kb(n) { return n > 1048576 ? (n / 1048576).toFixed(1) + " MB" : Math.round(n / 1024) + " KB"; }
+  function loadPhotos() {
+    return Promise.all([api("GET", "/api/admin/media"), api("GET", "/api/admin/settings")]).then(function (r) {
+      var media = r[0].media, hero = r[1].heroImage || "";
+      $("photos").innerHTML = '<div class="top"><h3 style="margin:0">Photos (' + media.length + ')</h3><label style="flex-direction:row;align-items:center;gap:.5rem">Upload photos <input id="phFile" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" style="width:auto"></label></div>' +
+        '<p class="hint">Home page photo (the big picture at the top of your store): ' + (hero ? '<b>' + esc(hero) + '</b> <button class="sec" id="heroClear" type="button" style="padding:.2rem .5rem">Remove</button>' : "default") + "</p>" +
+        '<div class="lib">' + media.map(function (m) {
+          return '<figure><img src="' + esc(m.image) + '" alt=""><span>' + kb(m.size) + "</span><span>" + (m.usedBy.length ? "Used: " + esc(m.usedBy.join(", ")) : "Not used") + "</span>" +
+            '<button class="sec" data-hero="' + esc(m.image) + '" type="button">Use on home page</button>' +
+            (m.usedBy.length ? "" : '<button class="dng" data-delp="' + esc(m.image) + '" type="button">Delete</button>') + "</figure>";
+        }).join("") + "</div>" + (media.length ? "" : "<p>No uploaded photos yet. Upload some, or add them directly when you add a product.</p>");
+      $("phFile").onchange = function () {
+        var files = Array.prototype.slice.call(this.files), n = 0; say("Uploading...");
+        files.reduce(function (p, f) { return p.then(function () { return upload(f).then(function () { n++; }); }); }, Promise.resolve())
+          .then(function () { say(n + " photo(s) uploaded."); loadPhotos(); }).catch(function (e) { say(e.message); loadPhotos(); });
+      };
+      if ($("heroClear")) $("heroClear").onclick = function () { setHero(""); };
+    }).catch(function (e) { say(e.message); });
+  }
+  function setHero(img) { api("PUT", "/api/admin/settings", { heroImage: img }).then(function () { say(img ? "Home page photo updated." : "Home page photo removed."); loadPhotos(); }).catch(function (e) { say(e.message); }); }
+  $("photos").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.hero) setHero(b.dataset.hero);
+    if (b.dataset.delp && confirm("Delete this photo permanently?")) api("DELETE", "/api/admin/media?image=" + encodeURIComponent(b.dataset.delp)).then(function () { say("Photo deleted."); loadPhotos(); }).catch(function (er) { say(er.message); });
+  };
+
+  // ---- Categories tab ----
+  function loadCategories() {
+    return api("GET", "/api/admin/products").then(function (d) {
+      cats = d.categories; prods = d.products;
+      $("categories").innerHTML = '<div class="top"><h3 style="margin:0">Categories</h3><span><input id="newCat" placeholder="New category name" maxlength="30" style="width:220px"> <button id="addCat" type="button">Add</button></span></div><div class="wrap"><table><tr><th>Name</th><th>Products</th><th></th></tr>' +
+        cats.map(function (c) {
+          var n = prods.filter(function (p) { return p.category === c; }).length;
+          return "<tr><td><b>" + esc(c) + "</b></td><td>" + n + '</td><td><button class="sec" data-ren="' + esc(c) + '" type="button">Rename</button> <button class="dng" data-delc="' + esc(c) + '" type="button">Delete</button></td></tr>';
+        }).join("") + "</table></div>";
+      $("addCat").onclick = function () { api("POST", "/api/admin/categories", { name: $("newCat").value }).then(function () { say("Category added."); loadCategories(); }).catch(function (e) { say(e.message); }); };
+    }).catch(function (e) { say(e.message); });
+  }
+  $("categories").onclick = function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    if (b.dataset.ren) { var to = prompt("New name for \"" + b.dataset.ren + "\":", b.dataset.ren); if (to && to !== b.dataset.ren) api("PUT", "/api/admin/categories", { from: b.dataset.ren, to: to }).then(function () { say("Category renamed."); loadCategories(); }).catch(function (er) { say(er.message); }); }
+    if (b.dataset.delc && confirm("Delete category \"" + b.dataset.delc + "\"?")) api("DELETE", "/api/admin/categories?name=" + encodeURIComponent(b.dataset.delc)).then(function () { say("Category deleted."); loadCategories(); }).catch(function (er) { say(er.message); });
+  };
+
+  // ---- Backup ----
+  $("backup").onclick = function () {
+    api("GET", "/api/admin/backup").then(function (d) {
+      var a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(d, null, 2)], { type: "application/json" }));
+      a.download = "sohails-backup-" + new Date().toISOString().slice(0, 10) + ".json"; a.click(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 2000);
+      say("Backup downloaded. Photos are kept in the uploads folder of your data volume.");
+    }).catch(function (e) { say(e.message); });
+  };
+
+  // ---- New order alerts: check the server every 8 seconds ----
+  function unlock() {
+    if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } }
+    if (ac && ac.state === "suspended") ac.resume();
+    if (!askedNotif && "Notification" in window && Notification.permission === "default") { askedNotif = true; Notification.requestPermission(); }
+  }
+  document.addEventListener("click", unlock); document.addEventListener("keydown", unlock);
+  function beep() {
+    if (!ac || ac.state !== "running") return;
+    [880, 880, 1175].forEach(function (f, i) {
+      var o = ac.createOscillator(), g = ac.createGain(), t = ac.currentTime + i * 0.28;
+      o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(ac.destination);
+      g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.3, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+      o.start(t); o.stop(t + 0.26);
+    });
+  }
+  function goOrders() { document.querySelector('[data-tab="orders"]').click(); }
+  function poll() {
+    api("GET", "/api/admin/orders/summary").then(function (s) {
+      var c = $("ocount"); c.hidden = !s.unseen; c.textContent = s.unseen;
+      document.title = (s.unseen ? "(" + s.unseen + ") New order! | " : "") + baseTitle;
+      if (!s.unseen) $("alert").hidden = true;
+      if (s.unseen > lastUnseen && s.latest.length) {
+        var o = s.latest[0];
+        var text = s.unseen === 1 ? "New order " + o.id + " from " + o.name + " (" + o.city + ") - " + money(o.total) : s.unseen + " new orders. Latest: " + o.id + " from " + o.name + " - " + money(o.total);
+        $("alertText").textContent = text; $("alert").hidden = false; beep();
+        if ("Notification" in window && Notification.permission === "granted") { try { new Notification("Sohail's Collection - new order", { body: text }); } catch (e) {} }
+        loadOrders(); loadProducts();
+      }
+      lastUnseen = s.unseen;
+    }).catch(function () {});
+  }
+  $("alertView").onclick = goOrders;
+  $("alertSeen").onclick = function () {
+    api("POST", "/api/admin/orders/seen").then(function () { $("alert").hidden = true; lastUnseen = 0; $("ocount").hidden = true; document.title = baseTitle; loadOrders(); }).catch(function (e) { say(e.message); });
+  };
+  function start() { show(true); loadOrders(); loadProducts(); lastUnseen = 0; clearInterval(pollTimer); poll(); pollTimer = setInterval(poll, 8000); }
+  if (token) start();
+})();
+</script></body></html>

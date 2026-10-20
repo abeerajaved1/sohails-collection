@@ -1,0 +1,18 @@
+# One-click deploy on Render.com (needs a paid plan because of the persistent disk)
+services:
+  - type: web
+    name: sohails-collection
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: TRUST_PROXY
+        value: "1"
+      - key: DATA_DIR
+        value: /data
+    disk:
+      name: store-data
+      mountPath: /data
+      sizeGB: 2
